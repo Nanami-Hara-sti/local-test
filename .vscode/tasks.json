@@ -1,0 +1,69 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "func",
+      "label": "func: host start",
+      "command": "host start",
+      "problemMatcher": "$func-python-watch",
+      "isBackground": true,
+      "dependsOn": "pip install (functions)"
+    },
+    {
+      "label": "pip install (functions)",
+      "type": "shell",
+      "osx": {
+        "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+      },
+      "windows": {
+        "command": "${config:azureFunctions.pythonVenv}/Scripts/python -m pip install -r requirements.txt"
+      },
+      "linux": {
+        "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "FastAPI: Start Development Server",
+      "type": "shell",
+      "command": "${config:azureFunctions.pythonVenv}/bin/python",
+      "args": ["-m", "uvicorn", "fastapi_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Uvicorn running on.*$",
+          "endsPattern": "^.*Application startup complete.*$"
+        }
+      }
+    },
+    {
+      "label": "FastAPI: Run Tests",
+      "type": "shell",
+      "command": "${config:azureFunctions.pythonVenv}/bin/python",
+      "args": ["-m", "pytest", "-v"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      }
+    }
+  ]
+}

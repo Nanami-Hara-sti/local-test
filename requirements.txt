@@ -1,0 +1,27 @@
+# DO NOT include azure-functions-worker in this file
+# The Python Worker is managed by Azure Functions platform
+# Manually managing azure-functions-worker may cause unexpected issues
+
+# Azure Functions dependencies
+azure-functions
+azure-identity
+azure-keyvault-secrets
+azure-storage-blob
+azure-eventgrid
+
+# FastAPI dependencies
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+jinja2
+python-jose[cryptography]
+
+# Common dependencies
+requests
+httpx
+aiofiles
+pytest
+pytest-asyncio
+black
+flake8

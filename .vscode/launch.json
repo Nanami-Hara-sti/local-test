@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Python Functions",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 9091
+      },
+      "preLaunchTask": "func: host start"
+    },
+    {
+      "name": "FastAPI: Debug",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/.venv/bin/uvicorn",
+      "args": ["fastapi_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "FastAPI: Run App",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/fastapi_app.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

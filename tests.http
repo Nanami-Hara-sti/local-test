@@ -1,0 +1,70 @@
+### FastAPI テストリクエスト
+
+# ベースURL
+@baseUrl = http://localhost:8000
+
+### ヘルスチェック
+GET {{baseUrl}}/health
+
+### ルート
+GET {{baseUrl}}/
+
+### アイテム一覧を取得
+GET {{baseUrl}}/items
+
+### 特定のアイテムを取得
+GET {{baseUrl}}/items/1
+
+### 新しいアイテムを作成
+POST {{baseUrl}}/items
+Content-Type: application/json
+
+{
+  "name": "新しい商品",
+  "description": "テスト用の商品",
+  "price": 1500.0,
+  "tax": 150.0
+}
+
+### アイテムを更新
+PUT {{baseUrl}}/items/1
+Content-Type: application/json
+
+{
+  "name": "更新されたラップトップ",
+  "description": "高性能ノートPC（更新版）",
+  "price": 180000.0,
+  "tax": 18000.0
+}
+
+### アイテムを削除
+DELETE {{baseUrl}}/items/2
+
+### ユーザー一覧を取得
+GET {{baseUrl}}/users
+
+### 特定のユーザーを取得
+GET {{baseUrl}}/users/1
+
+### 新しいユーザーを作成
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "新規ユーザー",
+  "email": "newuser@example.com"
+}
+
+### Azure Blob Storage - テキスト取得（プレーンテキスト）
+GET {{baseUrl}}/blob?container=helloworld&blob=helloworld.txt
+
+### Azure Blob Storage - Blob情報取得（JSON）
+GET {{baseUrl}}/blob/info?container=helloworld&blob=helloworld.txt
+
+### Swagger UI
+# @name swagger
+GET {{baseUrl}}/docs
+
+### ReDoc
+# @name redoc
+GET {{baseUrl}}/redoc

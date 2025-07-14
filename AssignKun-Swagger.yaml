@@ -1,0 +1,1711 @@
+openapi: 3.0.3
+info:
+  title: Assign-Kun
+  version: 3.0.6
+  description: |
+    Assign-Kun API - アサインメント管理システム
+    
+    このAPIは以下の機能を提供します：
+    - アサイン情報の取得・更新
+    - ヒストグラムデータの管理
+    - プロジェクト情報の管理
+    - ユーザー情報の管理
+    - 通知管理
+    - 総計情報の取得
+tags:
+  - name: data
+    description: データ取得API
+  - name: notice
+    description: 通知管理API
+paths:
+  /assign:
+    get:
+      tags:
+        - data
+      summary: ホーム画面アサインデータ取得API
+      description: |
+        ホーム画面に必要なアサインデータを取得して返却します
+        - アサイン表
+      parameters:
+        - name: month
+          in: query
+          required: false
+          description: |
+            基準月（指定月の前後1ヶ月分のデータを取得）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assigns:
+                    $ref: '#/components/schemas/AssinArray'
+              example:
+                assigns:
+                  - user_name: "田中太郎"
+                    assin_execution: 120.0
+                    assin_maintenance: 20.0
+                    assin_prospect: 10.0
+                    assin_common_cost: 5.0
+                    assin_most_com_ps: 3.0
+                    assin_sales_mane: 2.0
+                    assin_investigation: 0.0
+                    month_totals:
+                      previous_month:
+                        month: 4
+                        total_assin: 150.5
+                      current_month:
+                        month: 5
+                        total_assin: 160.0
+                      next_month:
+                        month: 6
+                        total_assin: 155.8
+                    assin_project_code: 1
+                    assin_directly: 140.0
+                    assin_common: 15.0
+                    assin_sales_sup: 5.0
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+      security: []
+
+    put:
+      tags:
+        - data
+      summary: ホーム画面アサインデータ更新API
+      description: |
+        ホーム画面のアサインデータを更新して最新の状態に同期します
+        - アサインデータの再計算
+        - キャッシュのクリア
+      parameters:
+        - name: force_refresh
+          in: query
+          required: false
+          description: |
+            強制的にデータを再計算するかどうか
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: ホーム画面アサインデータ更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ホーム画面アサインデータが正常に更新されました"
+                  updated_at:
+                    type: string
+                    format: datetime
+                    description: 更新完了日時
+                    example: "2025-07-08T10:30:00Z"
+                  updated_counts:
+                    type: object
+                    properties:
+                      assigns:
+                        type: integer
+                        description: 更新されたアサインデータの件数
+                        example: 25
+              example:
+                message: "ホーム画面アサインデータが正常に更新されました"
+                updated_at: "2025-07-08T10:30:00Z"
+                updated_counts:
+                  assigns: 25
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+      security: []
+
+  /histograms:
+    get:
+      tags:
+        - data
+      summary: ヒストグラムデータ取得API
+      description: |
+        リソースヒストグラム一覧を取得して返却します
+      parameters:
+        - name: month
+          in: query
+          required: false
+          description: 基準月（指定月のデータを取得）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistogramArray'
+              example:
+                - histogram_ac_code: "AC001"
+                  histogram_ac_name: "アカウント1"
+                  histogram_pj_br_num: "PJ001"
+                  histogram_pj_name: "プロジェクト1"
+                  histogram_pj_contract_form: "請負"
+                  histogram_costs_unit: 1
+                  histogram_year: 2025
+                  annual_data:
+                    histogram_1month: 1.2
+                    histogram_2month: 1.5
+                    histogram_3month: 1.8
+                    histogram_4month: 1.5
+                    histogram_5month: 2.0
+                    histogram_6month: 1.8
+                    histogram_7month: 2.2
+                    histogram_8month: 1.9
+                    histogram_9month: 2.1
+                    histogram_10month: 1.7
+                    histogram_11month: 1.6
+                    histogram_12month: 1.4
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    post:
+      tags:
+        - data
+      summary: ヒストグラムCSVアップロードAPI
+      description: |
+        ヒストグラムデータのCSVファイルをアップロードして一括登録します
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: ヒストグラムデータのCSVファイル
+              required:
+                - file
+            encoding:
+              file:
+                contentType: text/csv
+            example:
+              file: "[CSV形式] histogram_ac_code,histogram_ac_name,histogram_pj_br_num,histogram_pj_name,histogram_pj_contract_form,histogram_costs_unit,histogram_year,histogram_1month,histogram_2month,histogram_3month,histogram_4month,histogram_5month,histogram_6month,histogram_7month,histogram_8month,histogram_9month,histogram_10month,histogram_11month,histogram_12month"
+      responses:
+        200:
+          description: ヒストグラムCSVファイルアップロード成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ヒストグラムデータが正常にアップロードされました"
+                  type:
+                    type: string
+                    description: アップロードしたデータの種類
+                    example: "histograms"
+                  updated_by:
+                    type: string
+                    description: データを更新したユーザーの氏名
+                    example: "田中太郎"
+                  filename:
+                    type: string
+                    description: アップロードされたファイル名
+                    example: "histogram_data_20250708.csv"
+              example:
+                message: "ヒストグラムデータが正常にアップロードされました"
+                type: "histograms"
+                updated_by: "田中太郎"
+                filename: "histogram_data_20250708.csv"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        413:
+          $ref: '#/components/responses/PayloadTooLarge'
+        415:
+          $ref: '#/components/responses/UnsupportedMediaType'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    put:
+      tags:
+        - data
+      summary: ヒストグラムデータ更新・追加API
+      description: |
+        ヒストグラムデータを手動で更新または新規追加します <br>
+        IDパラメータが指定されている場合は更新、指定されていない場合は新規追加を行います
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: 更新するレコードのID（新規追加の場合は省略）
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Histogram'
+            example:
+              histogram_ac_code: "AC001"
+              histogram_ac_name: "アカウント1"
+              histogram_pj_br_num: "PJ001"
+              histogram_pj_name: "プロジェクト1"
+              histogram_pj_contract_form: "請負"
+              histogram_costs_unit: 1
+              histogram_year: 2025
+              annual_data:
+                histogram_1month: 1.2
+                histogram_2month: 1.5
+                histogram_3month: 1.8
+                histogram_4month: 1.5
+                histogram_5month: 2.0
+                histogram_6month: 1.8
+                histogram_7month: 2.2
+                histogram_8month: 1.9
+                histogram_9month: 2.1
+                histogram_10month: 1.7
+                histogram_11month: 1.6
+                histogram_12month: 1.4
+      responses:
+        200:
+          description: ヒストグラムデータ更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ヒストグラムデータが正常に更新されました"
+                  type:
+                    type: string
+                    example: "histograms"
+                  id:
+                    type: integer
+                    description: 更新されたレコードのID
+                    example: 1
+        201:
+          description: ヒストグラムデータ新規追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ヒストグラムデータが正常に追加されました"
+                  type:
+                    type: string
+                    example: "histograms"
+                  id:
+                    type: integer
+                    description: 新規作成されたレコードのID
+                    example: 25
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    delete:
+      tags:
+        - data
+      summary: ヒストグラムデータ削除API
+      description: |
+        指定されたヒストグラムデータを削除します
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 削除するレコードのID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ヒストグラムデータ削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ヒストグラムデータが正常に削除されました"
+                  type:
+                    type: string
+                    example: "histograms"
+                  id:
+                    type: integer
+                    description: 削除されたレコードのID
+                    example: 5
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /projects:
+    get:
+      tags:
+        - data
+      summary: プロジェクトデータ取得API
+      description: |
+        プロジェクト一覧を取得して返却します
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectArray'
+              example:
+                - project_br_num: "PJ001"
+                  project_name: "Webシステム開発"
+                  project_contract_form: "請負"
+                  project_sched_self: "2025-01-01"
+                  project_sched_to: "2025-12-31"
+                  project_type_name: "システム開発"
+                  project_classification: "新規開発"
+                  project_budget_no: "B2025001"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    post:
+      tags:
+        - data
+      summary: プロジェクトCSVアップロードAPI
+      description: |
+        プロジェクトCSVファイルをアップロードして一括でデータを登録します
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: プロジェクトCSVファイル
+              required:
+                - file
+            encoding:
+              file:
+                contentType: text/csv
+            example:
+              file: "[CSV形式] project_br_num,project_name,project_contract_form,project_sched_self,project_sched_to,project_type_name,project_classification,project_budget_no"
+      responses:
+        200:
+          description: プロジェクトCSVファイルアップロード成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトデータが正常にアップロードされました"
+                  type:
+                    type: string
+                    example: "projects"
+                  updated_by:
+                    type: string
+                    description: データを更新したユーザーの氏名
+                    example: "佐藤花子"
+                  filename:
+                    type: string
+                    description: アップロードされたファイル名
+                    example: "project_data_20250708.csv"
+                  records_processed:
+                    type: integer
+                    description: 処理されたレコード数
+                    example: 25
+        400:
+          $ref: '#/components/responses/BadRequest'
+        413:
+          $ref: '#/components/responses/PayloadTooLarge'
+        415:
+          $ref: '#/components/responses/UnsupportedMediaType'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    put:
+      tags:
+        - data
+      summary: プロジェクトデータ更新・追加API
+      description: |
+        プロジェクトデータを手動で更新または新規追加します <br>
+        IDパラメータが指定されている場合は更新、指定されていない場合は新規追加を行います
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: 更新するレコードのID（新規追加の場合は省略）
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+            example:
+              project_br_num: "PJ002"
+              project_name: "新規Webシステム開発"
+              project_contract_form: "SES"
+              project_sched_self: "2025-02-01"
+              project_sched_to: "2025-11-30"
+              project_type_name: "システム開発"
+              project_classification: "新規開発"
+              project_budget_no: "B2025002"
+      responses:
+        200:
+          description: プロジェクトデータ更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトデータが正常に更新されました"
+                  type:
+                    type: string
+                    example: "projects"
+                  id:
+                    type: integer
+                    description: 更新されたレコードのID
+                    example: 3
+        201:
+          description: プロジェクトデータ新規追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトデータが正常に追加されました"
+                  type:
+                    type: string
+                    example: "projects"
+                  id:
+                    type: integer
+                    description: 新規作成されたレコードのID
+                    example: 12
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    delete:
+      tags:
+        - data
+      summary: プロジェクトデータ削除API
+      description: |
+        指定されたプロジェクトデータを削除します
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 削除するレコードのID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: プロジェクトデータ削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトデータが正常に削除されました"
+                  type:
+                    type: string
+                    example: "projects"
+                  id:
+                    type: integer
+                    description: 削除されたレコードのID
+                    example: 7
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /users:
+    get:
+      tags:
+        - data
+      summary: ユーザーデータ取得API
+      description: |
+        メンバーリストを取得して返却します
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserArray'
+              example:
+                - user_code: "U001"
+                  user_name: "田中太郎"
+                  user_team: "開発チーム"
+                  user_type: "GENERAL"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    post:
+      tags:
+        - data
+      summary: ユーザーCSVアップロードAPI
+      description: |
+        ユーザーCSVファイルをアップロードして一括でデータを登録します
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: ユーザーCSVファイル
+              required:
+                - file
+            encoding:
+              file:
+                contentType: text/csv
+            example:
+              file: "[CSV形式] user_code,user_name,user_team,user_type"
+      responses:
+        200:
+          description: ユーザーCSVファイルアップロード成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ユーザーデータが正常にアップロードされました"
+                  type:
+                    type: string
+                    example: "users"
+                  updated_by:
+                    type: string
+                    description: データを更新したユーザーの氏名
+                    example: "鈴木一郎"
+                  filename:
+                    type: string
+                    description: アップロードされたファイル名
+                    example: "user_data_20250708.csv"
+                  records_processed:
+                    type: integer
+                    description: 処理されたレコード数
+                    example: 45
+        400:
+          $ref: '#/components/responses/BadRequest'
+        413:
+          $ref: '#/components/responses/PayloadTooLarge'
+        415:
+          $ref: '#/components/responses/UnsupportedMediaType'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    put:
+      tags:
+        - data
+      summary: ユーザーデータ更新・追加API
+      description: |
+        ユーザーデータを手動で更新または新規追加します <br>
+        IDパラメータが指定されている場合は更新、指定されていない場合は新規追加を行います
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: 更新するレコードのID（新規追加の場合は省略）
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+            example:
+              user_code: "U005"
+              user_name: "鈴木花子"
+              user_team: "開発チーム"
+              user_type: "MANAGER"
+      responses:
+        200:
+          description: ユーザーデータ更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ユーザーデータが正常に更新されました"
+                  type:
+                    type: string
+                    example: "users"
+                  id:
+                    type: integer
+                    description: 更新されたレコードのID
+                    example: 5
+        201:
+          description: ユーザーデータ新規追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ユーザーデータが正常に追加されました"
+                  type:
+                    type: string
+                    example: "users"
+                  id:
+                    type: integer
+                    description: 新規作成されたレコードのID
+                    example: 8
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    delete:
+      tags:
+        - data
+      summary: ユーザーデータ削除API
+      description: |
+        指定されたユーザーデータを削除します
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 削除するレコードのID
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ユーザーデータ削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ユーザーデータが正常に削除されました"
+                  type:
+                    type: string
+                    example: "users"
+                  id:
+                    type: integer
+                    description: 削除されたレコードのID
+                    example: 3
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /information:
+    get:
+      tags:
+        - data
+      summary: 情報表示画面API
+      description: |
+        総計情報を取得します
+        - month_totals: 指定月の前後1ヶ月分の合計値
+        - totals: 総計情報一覧
+      parameters:
+        - name: month
+          in: query
+          required: true
+          description: 基準月（前後1ヶ月分の合計値を取得）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 5
+        - name: year
+          in: query
+          required: false
+          description: 対象年
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2100
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base_month:
+                    type: integer
+                    description: ユーザーが指定した基準月
+                    minimum: 1
+                    maximum: 12
+                    example: 5
+                  target_year:
+                    type: integer
+                    description: 対象年
+                    example: 2025
+                  month_totals:
+                    $ref: '#/components/schemas/MonthTotals'
+                  totals:
+                    $ref: '#/components/schemas/TotalArray'
+              example:
+                base_month: 5
+                target_year: 2025
+                month_totals:
+                  previous_month:
+                    month: 4
+                    total_amount: 1250.75
+                  current_month:
+                    month: 5
+                    total_amount: 1400.50
+                  next_month:
+                    month: 6
+                    total_amount: 1325.25
+                totals:
+                  - total_year: "2025"
+                    total_month: 5
+                    total_execution: 800.0
+                    total_maintenance: 150.0
+                    total_prospect: 100.0
+                    total_common_cost: 50.0
+                    total_most_com_ps: 30.0
+                    total_sales_mane: 20.0
+                    total_investigation: 10.0
+                    total_directly: 900.0
+                    total_common: 180.0
+                    total_sales_sup: 25.0
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+  /notice:
+    get:
+      tags:
+        - notice
+      summary: 通知一覧取得API
+      description: |
+        ユーザーの通知一覧を取得します
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: ページ番号
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: 1ページあたりの件数
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        200:
+          description: 通知一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notice:
+                    $ref: '#/components/schemas/NoticeArray'
+                  pagination:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      total_pages:
+                        type: integer
+                        example: 5
+                      total_count:
+                        type: integer
+                        example: 95
+                      limit:
+                        type: integer
+                        example: 20
+                      has_next:
+                        type: boolean
+                        example: true
+                      has_previous:
+                        type: boolean
+                        example: false
+              example:
+                notice:
+                  - notice_time: "2025-07-08T10:00:00Z"
+                    user_name: "田中太郎"
+                    notice_text: "プロジェクトPJ001の工事進行基準が達成されました"
+                    project_name: "Webシステム開発"
+                    notice_type: "工事進行基準案件"
+                pagination:
+                  current_page: 1
+                  total_pages: 5
+                  total_count: 95
+                  limit: 20
+                  has_next: true
+                  has_previous: false
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+
+    post:
+      tags:
+        - notice
+      summary: 通知作成API
+      description: |
+        新しい通知を作成します（管理者権限が必要）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationCreateRequest'
+            example:
+              notice_text: "システムメンテナンスを実施します"
+              user_name: "田中太郎"
+              project_name: null
+              notice_type: "システムメンテナンス"
+      responses:
+        201:
+          description: 通知作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "通知が正常に作成されました"
+                  notice_id:
+                    type: integer
+                    example: 123
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: "2025-07-08T10:30:00Z"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          $ref: '#/components/responses/ServiceUnavailable'
+security:
+  - entra_id_auth: ["api://your-app-id/access_as_user"]
+
+components:
+  schemas:
+    HistogramArray:
+      type: array
+      description: histograms
+      items:
+        $ref: '#/components/schemas/Histogram'
+    
+    Histogram:
+      type: object
+      properties:
+        histogram_id:
+          type: integer
+          description: テーブル管理用ID
+        histogram_ac_code:
+          type: integer
+          description: ユーザーテーブルID
+        histogram_pj_br_num:
+          type: string
+          maxLength: 30
+          description: プロジェクトテーブルID
+        histogram_costs_unit:
+          type: integer
+          description: 工数単位
+        histogram_year:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+          description: 年
+        annual_data:
+          $ref: '#/components/schemas/AnnualData'
+      required:
+        - histogram_ac_code
+        - histogram_ac_name
+        - histogram_year
+        - annual_data
+    
+    AnnualData:
+      type: object
+      description: 一年間（1-12月）のヒストグラムデータ
+      properties:
+        histogram_01month:
+          type: number
+          format: decimal
+          description: 1月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_02month:
+          type: number
+          format: decimal
+          description: 2月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_03month:
+          type: number
+          format: decimal
+          description: 3月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_04month:
+          type: number
+          format: decimal
+          description: 4月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_05month:
+          type: number
+          format: decimal
+          description: 5月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_06month:
+          type: number
+          format: decimal
+          description: 6月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_07month:
+          type: number
+          format: decimal
+          description: 7月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_08month:
+          type: number
+          format: decimal
+          description: 8月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_09month:
+          type: number
+          format: decimal
+          description: 9月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_10month:
+          type: number
+          format: decimal
+          description: 10月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_11month:
+          type: number
+          format: decimal
+          description: 11月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+        histogram_12month:
+          type: number
+          format: decimal
+          description: 12月のヒストグラム値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+    
+    MonthData:
+      type: object
+      properties:
+        previous_month:
+          $ref: '#/components/schemas/MonthValue'
+        current_month:
+          $ref: '#/components/schemas/MonthValue'
+        next_month:
+          $ref: '#/components/schemas/MonthValue'
+    
+    MonthValue:
+      type: object
+      properties:
+        month:
+          type: integer
+        value:
+          type: number
+          format: decimal
+          description: histogram_Xmonthカラムの値（decimal(5,2)）
+          minimum: 0.01
+          maximum: 999.99
+      required:
+        - month
+        - value
+    
+    MonthTotals:
+      type: object
+      description: 基準月の前後1ヶ月分の合計値データ
+      properties:
+        previous_month:
+          $ref: '#/components/schemas/MonthTotal'
+        current_month:
+          $ref: '#/components/schemas/MonthTotal'
+        next_month:
+          $ref: '#/components/schemas/MonthTotal'
+    
+    MonthTotal:
+      type: object
+      properties:
+        month:
+          type: integer
+        total_amount:
+          type: number
+          format: float
+          description: その月の合計値
+      required:
+        - month
+        - total_amount
+    
+    ProjectArray:
+      type: array
+      description: projects
+      items:
+        $ref: '#/components/schemas/Project'
+    
+    Project:
+      type: object
+      properties:
+        project_id:
+          type: integer
+          description: テーブル管理用ID
+        project_br_num:
+          type: string
+          maxLength: 30
+          description: PJコード枝番
+        project_name:
+          type: string
+          maxLength: 100
+          description: PJ名称
+        project_contract_form:
+          type: string
+          maxLength: 30
+          description: PJ契約形態
+        project_sched_self:
+          type: string
+          format: date
+          description: 予定期間(自)
+        project_sched_to:
+          type: string
+          format: date
+          description: 予定期間(至)
+        project_type_name:
+          type: string
+          maxLength: 30
+          description: PJタイプ名称
+        project_classification:
+          type: string
+          maxLength: 30
+          description: PJ分類
+        project_estimate_num:
+          type: string
+          maxLength: 30
+          description: 実行予算見積番号
+        project_valid_from:
+          type: string
+          format: date
+          description: 追加日
+        project_valid_to:
+          type: string
+          format: date
+          description: 有効期限
+        project_is_current:
+          type: boolean
+          description: 現行PJフラグ
+      required:
+        - project_br_num
+        - project_name
+        - project_contract_form
+    
+    UserArray:
+      type: array
+      description: users
+      items:
+        $ref: '#/components/schemas/User'
+    
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: ユーザーID（更新・削除時に必要、新規追加時は自動採番）
+        user_code:
+          type: string
+          maxLength: 30
+          description: ユーザーコード
+        user_name:
+          type: string
+          maxLength: 30
+          description: ユーザー名
+        user_team:
+          type: string
+          maxLength: 30
+          description: 所属チーム
+      required:
+        - user_code
+        - user_name
+    
+    AssinArray:
+      type: array
+      description: assins
+      items:
+        $ref: '#/components/schemas/Assin'
+    
+    Assin:
+      type: object
+      properties:
+        assins_id:
+          type: integer
+          description: テーブル管理用ID
+        assin_user_code:
+          type: integer
+          description: ユーザー
+        month_totals:
+          type: object
+          description: 基準月の前後1ヶ月分のアサイン合計値
+          properties:
+            previous_month:
+              type: object
+              description: 前月のアサイン合計値（基準月-1）
+              properties:
+                month:
+                  type: integer
+                  example: 4
+                total_assin:
+                  type: number
+                  format: float
+                  description: その月のアサイン合計値
+                  example: 150.5
+            current_month:
+              type: object
+              description: 基準月のアサイン合計値
+              properties:
+                month:
+                  type: integer
+                  example: 5
+                total_assin:
+                  type: number
+                  format: float
+                  description: その月のアサイン合計値
+                  example: 160.0
+            next_month:
+              type: object
+              description: 翌月のアサイン合計値（基準月+1）
+              properties:
+                month:
+                  type: integer
+                  example: 6
+                total_assin:
+                  type: number
+                  format: float
+                  description: その月のアサイン合計値
+                  example: 155.8
+        assin_total:
+          type: number
+          format: decimal
+          description: 合計
+          minimum: 0.01
+          maximum: 999.99
+        assin_execution:
+          type: number
+          format: decimal
+          description: 実行
+          minimum: 0.01
+          maximum: 999.99
+        assin_maintenance:
+          type: number
+          format: decimal
+          description: 保守
+          minimum: 0.01
+          maximum: 999.99
+        assin_prospect:
+          type: number
+          format: decimal
+          description: 見込
+          minimum: 0.01
+          maximum: 999.99
+        assin_common_cost:
+          type: number
+          format: decimal
+          description: 共通(原価)
+          minimum: 0.01
+          maximum: 999.99
+        assin_most_com_ps:
+          type: number
+          format: decimal
+          description: 大共通PS
+          minimum: 0.01
+          maximum: 999.99
+        assin_sales_mane:
+          type: number
+          format: decimal
+          description: 営支(販管)
+          minimum: 0.01
+          maximum: 999.99
+        assin_investigation:
+          type: number
+          format: decimal
+          description: 調検
+          minimum: 0.01
+          maximum: 999.99
+        assin_project_code:
+          type: integer
+          description: PJコード
+        assin_directly:
+          type: number
+          format: decimal
+          description: 直接
+          minimum: 0.01
+          maximum: 999.99
+        assin_common:
+          type: number
+          format: decimal
+          description: 共通
+          minimum: 0.01
+          maximum: 999.99
+        assin_sales_sup:
+          type: number
+          format: decimal
+          description: 営支
+          minimum: 0.01
+          maximum: 999.99
+      required:
+        - assin_user_code
+        - user_name
+    
+    TotalArray:
+      type: array
+      description: totals
+      items:
+        $ref: '#/components/schemas/Total'
+    
+    Total:
+      type: object
+      properties:
+        total_year:
+          type: string
+          maxLength: 30
+        total_month:
+          type: integer
+        total_execution:
+          type: number
+          format: float
+        total_maintenance:
+          type: number
+          format: float
+        total_prospect:
+          type: number
+          format: float
+        total_common_cost:
+          type: number
+          format: float
+        total_most_com_ps:
+          type: number
+          format: float
+        total_sales_mane:
+          type: number
+          format: float
+        total_investigation:
+          type: number
+          format: float
+        total_directly:
+          type: number
+          format: float
+        total_common:
+          type: number
+          format: float
+        total_sales_sup:
+          type: number
+          format: float
+      required:
+        - total_year
+        - total_month
+    
+    NoticeArray:
+      type: array
+      description: notices
+      items:
+        $ref: '#/components/schemas/Notice'
+    
+    Notice:
+      type: object
+      properties:
+        notice_time:
+          type: string
+          format: datetime
+          description: 通知発生日時
+        notice_text:
+          type: string
+          maxLength: 500
+          description: 本文
+        notice_name:
+          type: integer
+          description: お知らせユーザー
+        notice_type:
+          type: string
+          maxLength: 50
+          description: 通知の種類
+          enum:
+            - "工事進行基準案件"
+            - "システムメンテナンス"
+            - "データ更新"
+            - "その他"
+          nullable: true
+      required:
+        - notice_time
+        - notice_text
+        - user_name
+        - notice_type
+    
+    NotificationCreateRequest:
+      type: object
+      properties:
+        notice_text:
+          type: string
+          maxLength: 500
+          description: 通知メッセージ
+        user_name:
+          type: string
+          maxLength: 30
+          description: 通知対象ユーザー名
+        project_name:
+          type: string
+          maxLength: 100
+          description: 関連するプロジェクト名
+          nullable: true
+        notice_type:
+          type: string
+          maxLength: 50
+          description: 通知の種類
+          enum:
+            - "工事進行基準案件"
+            - "システムメンテナンス"
+            - "データ更新"
+            - "その他"
+      required:
+        - notice_text
+        - user_name
+        - notice_type
+    
+    NotificationUpdateRequest:
+      type: object
+      properties:
+        notice_text:
+          type: string
+          maxLength: 500
+          description: 通知メッセージ
+        project_name:
+          type: string
+          maxLength: 100
+          description: 関連するプロジェクト名
+          nullable: true
+        notice_type:
+          type: string
+          maxLength: 50
+          description: 通知の種類
+          enum:
+            - "工事進行基準案件"
+            - "システムメンテナンス"
+            - "データ更新"
+            - "その他"
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: integer
+          description: エラー番号
+        error_message:
+          type: string
+          description: エラーメッセージ
+        description:
+          type: string
+          description: エラーの詳細説明
+  
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 400
+            error_message: "Bad Request"
+            description: "リクエストパラメータが不正です"
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 401
+            error_message: "Unauthorized"
+            description: "認証が必要です。有効な認証情報を提供してください"
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 403
+            error_message: "Forbidden"
+            description: "この操作を実行する権限がありません"
+    
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 404
+            error_message: "Not Found"
+            description: "指定されたデータが見つかりません"
+        
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 409
+            error_message: "Conflict"
+            description: "データの競合が発生しました。同一のコードが既に存在するか、参照整合性の制約に違反しています"
+    
+    PayloadTooLarge:
+      description: Payload Too Large
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 413
+            error_message: "Payload Too Large"
+            description: "アップロードされたファイルのサイズが上限を超えています"
+    
+    UnsupportedMediaType:
+      description: Unsupported Media Type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 415
+            error_message: "Unsupported Media Type"
+            description: "サポートされていないファイル形式です。CSVファイルをアップロードしてください"
+    
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 422
+            error_message: "Unprocessable Entity"
+            description: "入力データのバリデーションエラーです。必須フィールドの不足やデータ形式に問題があります"
+    
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 500
+            error_message: "Internal Server Error"
+            description: "サーバー内部でエラーが発生しました。時間をおいて再度お試しください"
+    
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error_code: 503
+            error_message: "Service Unavailable"
+            description: "サービスが一時的に利用できません。メンテナンス中またはサーバー過負荷の可能性があります"
+    
+    Created:
+      description: データ新規追加成功
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "データが正常に追加されました"
+              type:
+                type: string
+                description: 追加されたデータの種類
+              id:
+                type: integer
+                description: 新規作成されたレコードのID
+          examples:
+            histogram_create_success:
+              summary: ヒストグラム新規追加成功
+              value:
+                message: "ヒストグラムデータが正常に追加されました"
+                type: "histograms"
+                id: 25
+            project_create_success:
+              summary: プロジェクト新規追加成功
+              value:
+                message: "プロジェクトデータが正常に追加されました"
+                type: "projects"
+                id: 12
+            user_create_success:
+              summary: ユーザー新規追加成功
+              value:
+                message: "ユーザーデータが正常に追加されました"
+                type: "users"
+                id: 8
+
+  securitySchemes:
+    entra_id_auth:
+      type: oauth2
+      description: Microsoft Entra IDを使用したOAuth 2.0認証
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+          scopes:
+            api://your-app-id/access_as_user: "ユーザーとしてAPIにアクセス"
+        implicit:
+          authorizationUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize
+          scopes:
+            api://your-app-id/access_as_user: "ユーザーとしてAPIにアクセス"
+        clientCredentials:
+          tokenUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+          scopes:
+            api://your-app-id/.default: "アプリケーション権限でAPIにアクセス"
+    # {tenant-id}は、Microsoft Entra IDのテナントIDに置き換え
+    # {your-app-id}は、APIアプリケーションのクライアントIDに置き換え
