@@ -134,6 +134,11 @@ def read_root():
                         <div class="description">メンバー情報表示・管理</div>
                     </a>
                     
+                    <a href="/assign-kun/notifications" class="link-button">
+                        🔔 通知データ
+                        <div class="description">通知一覧表示・管理</div>
+                    </a>
+                    
                     <div class="section-title">💾 Azure Blob Storage</div>
                     
                     <a href="/blob/view" class="link-button">

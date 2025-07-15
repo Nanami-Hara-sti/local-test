@@ -146,33 +146,30 @@ class MonthData(BaseModel):
 
 
 # プロジェクトデータ用のモデル
-class ProjectData(BaseModel):
+class Project(BaseModel):
     """プロジェクトデータ"""
     project_id: Optional[int] = None
-    project_code: str
+    project_br_num: str
     project_name: str
-    account_code: str
-    account_name: str
-    contract_form: str
-    start_date: str
-    end_date: Optional[str] = None
-    status: str
-    manager_name: Optional[str] = None
-    team_size: Optional[int] = None
-    budget: Optional[float] = None
-    description: Optional[str] = None
+    project_contract_form: str
+    project_sched_self: str
+    project_sched_to: str
+    project_type_name: str
+    project_classification: str
+    project_budget_no: str
+    project_estimate_num: Optional[str] = None
+    project_valid_from: Optional[str] = None
+    project_valid_to: Optional[str] = None
+    project_is_current: Optional[bool] = None
 
 
-class ProjectListResponse(BaseModel):
+class ProjectArray(BaseModel):
     """プロジェクト一覧のレスポンス"""
-    projects: list[ProjectData]
-    total_count: int
-    page: int
-    per_page: int
+    projects: list[Project]
 
 
 # ユーザーデータ用のモデル
-class UserData(BaseModel):
+class User(BaseModel):
     """ユーザーデータ"""
     user_id: Optional[int] = None
     user_code: str
@@ -181,9 +178,96 @@ class UserData(BaseModel):
     user_type: Optional[str] = "GENERAL"
 
 
-class UserListResponse(BaseModel):
+class UserArray(BaseModel):
     """ユーザー一覧のレスポンス"""
-    users: list[UserData]
-    total_count: int
-    page: int
-    per_page: int
+    users: list[User]
+
+
+# 通知データ用のモデル
+class Notice(BaseModel):
+    """通知データ"""
+    notice_id: Optional[int] = None
+    notice_time: str
+    notice_text: str
+    user_name: str
+    project_name: Optional[str] = None
+    notice_type: str
+
+
+class NoticeArray(BaseModel):
+    """通知一覧のレスポンス"""
+    notices: list[Notice]
+
+
+class NotificationCreateRequest(BaseModel):
+    """通知作成リクエスト"""
+    notice_text: str
+    user_name: str
+    project_name: Optional[str] = None
+    notice_type: str
+
+
+# アサインデータ用のモデル
+class MonthTotal(BaseModel):
+    """月合計データ"""
+    month: int
+    total_assin: Optional[float] = None
+
+
+class AssignMonthTotals(BaseModel):
+    """アサインの月合計データ"""
+    previous_month: MonthTotal
+    current_month: MonthTotal
+    next_month: MonthTotal
+
+
+class Assin(BaseModel):
+    """アサインデータ"""
+    assins_id: Optional[int] = None
+    user_name: str
+    assin_execution: Optional[float] = None
+    assin_maintenance: Optional[float] = None
+    assin_prospect: Optional[float] = None
+    assin_common_cost: Optional[float] = None
+    assin_most_com_ps: Optional[float] = None
+    assin_sales_mane: Optional[float] = None
+    assin_investigation: Optional[float] = None
+    month_totals: AssignMonthTotals
+    assin_project_code: Optional[int] = None
+    assin_directly: Optional[float] = None
+    assin_common: Optional[float] = None
+    assin_sales_sup: Optional[float] = None
+
+
+class AssinArray(BaseModel):
+    """アサイン一覧"""
+    assigns: list[Assin]
+
+
+# 総計データ用のモデル
+class MonthTotals(BaseModel):
+    """月合計データ"""
+    previous_month: MonthTotal
+    current_month: MonthTotal
+    next_month: MonthTotal
+
+
+class Total(BaseModel):
+    """総計データ"""
+    total_year: str
+    total_month: int
+    total_execution: Optional[float] = None
+    total_maintenance: Optional[float] = None
+    total_prospect: Optional[float] = None
+    total_common_cost: Optional[float] = None
+    total_most_com_ps: Optional[float] = None
+    total_sales_mane: Optional[float] = None
+    total_investigation: Optional[float] = None
+    total_directly: Optional[float] = None
+    total_common: Optional[float] = None
+    total_sales_sup: Optional[float] = None
+
+
+class TotalArray(BaseModel):
+    """総計一覧"""
+    totals: list[Total]
