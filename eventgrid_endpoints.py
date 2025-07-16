@@ -24,30 +24,32 @@ async def handle_eventgrid_webhook(request: Request):
         # リクエストボディを取得
         body = await request.body()
         logger.info(f"Received EventGrid webhook: {body.decode()}")
-        
+
         # JSONとしてパース
         events = json.loads(body.decode())
-        
+
         # イベントが配列でない場合は配列にする
         if not isinstance(events, list):
             events = [events]
-        
+
         # 各イベントを処理
         for event in events:
             # タイムスタンプを追加
-            event['receivedAt'] = datetime.now().isoformat()
-            
+            event["receivedAt"] = datetime.now().isoformat()
+
             # メモリストレージに保存
             events_storage.append(event)
-            
+
             # ストレージサイズを制限（最新100件まで）
             if len(events_storage) > 100:
                 events_storage.pop(0)
-            
-            logger.info(f"Processed event: {event.get('eventType', 'Unknown')} - {event.get('subject', 'No subject')}")
-        
+
+            logger.info(
+                f"Processed event: {event.get('eventType', 'Unknown')} - {event.get('subject', 'No subject')}"
+            )
+
         return {"status": "success", "processed_events": len(events)}
-        
+
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in EventGrid webhook: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON format")
@@ -64,7 +66,7 @@ def get_events():
     return {
         "events": events_storage,
         "total_count": len(events_storage),
-        "last_updated": datetime.now().isoformat()
+        "last_updated": datetime.now().isoformat(),
     }
 
 
@@ -73,7 +75,6 @@ def clear_events():
     """
     保存されているイベントをクリア
     """
-    global events_storage
     event_count = len(events_storage)
     events_storage.clear()
     logger.info(f"Cleared {event_count} events from storage")

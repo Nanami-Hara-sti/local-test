@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
-from fastapi_app import app
+from function_app import fastapi_app
 
 # テストクライアントの作成
-client = TestClient(app)
+client = TestClient(fastapi_app)
 
 
 def test_read_root():

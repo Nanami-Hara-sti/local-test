@@ -27,7 +27,7 @@
       "label": "FastAPI: Start Development Server",
       "type": "shell",
       "command": "${config:azureFunctions.pythonVenv}/bin/python",
-      "args": ["-m", "uvicorn", "fastapi_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+      "args": ["-m", "uvicorn", "function_app:fastapi_app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -64,6 +64,40 @@
         "focus": false,
         "panel": "new"
       }
+    },
+    {
+      "label": "Alembic: Generate Migration",
+      "type": "shell",
+      "command": "${config:azureFunctions.pythonVenv}/bin/python",
+      "args": ["-m", "alembic", "revision", "--autogenerate", "-m", "${input:migrationMessage}"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Alembic: Run Migration",
+      "type": "shell",
+      "command": "${config:azureFunctions.pythonVenv}/bin/python",
+      "args": ["-m", "alembic", "upgrade", "head"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationMessage",
+      "description": "Enter migration message",
+      "default": "Auto-generated migration",
+      "type": "promptString"
     }
   ]
 }

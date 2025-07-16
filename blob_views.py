@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
-import os
 import logging
 
 # ログ設定

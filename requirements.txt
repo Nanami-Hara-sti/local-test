@@ -17,6 +17,12 @@ python-multipart
 jinja2
 python-jose[cryptography]
 
+# Database dependencies
+aiomysql
+sqlalchemy[asyncio]>=2.0.0
+alembic
+PyMySQL
+
 # Common dependencies
 requests
 httpx

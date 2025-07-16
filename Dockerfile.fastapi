@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリケーションコードをコピー
-COPY fastapi_app.py .
+COPY function_app.py .
 
 # ポート8000を公開
 EXPOSE 8000

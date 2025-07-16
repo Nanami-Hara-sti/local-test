@@ -2,7 +2,11 @@ from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import HTMLResponse
 import logging
 from typing import Optional
-from models import Histogram, Project, User
+from models import (
+    HistogramResponse,
+    ProjectResponse,
+    UserResponse,
+)
 
 # ログ設定
 logger = logging.getLogger(__name__)
@@ -11,16 +15,63 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/histograms", response_model=list[Histogram])
+@router.get("/assigns")
+def get_assign_data(
+    month: Optional[int] = Query(
+        None, description="基準月（指定月の前後1ヶ月分のデータを取得）", ge=1, le=12
+    )
+):
+    """
+    ホーム画面アサインデータ取得API
+    ホーム画面に必要なアサインデータを取得して返却します
+    """
+    logger.info(f"Assign data requested for month: {month}")
+
+    try:
+        # デモ用のサンプルアサインデータ
+        demo_assigns = [
+            {
+                "user_name": "田中太郎",
+                "assin_execution": 120.0,
+                "assin_maintenance": 20.0,
+                "assin_prospect": 10.0,
+                "assin_common_cost": 5.0,
+                "assin_most_com_ps": 3.0,
+                "assin_sales_mane": 2.0,
+                "assin_investigation": 0.0,
+                "month_totals": {
+                    "previous_month": {"month": 4, "total_assin": 150.5},
+                    "current_month": {"month": 5, "total_assin": 160.0},
+                    "next_month": {"month": 6, "total_assin": 155.8},
+                },
+                "assin_project_code": 1,
+                "assin_directly": 140.0,
+                "assin_common": 15.0,
+                "assin_sales_sup": 5.0,
+            }
+        ]
+
+        return {"assigns": demo_assigns}
+
+    except Exception as e:
+        logger.error(f"Error retrieving assign data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve assign data: {str(e)}"
+        )
+
+
+@router.get("/histograms", response_model=list[HistogramResponse])
 def get_histograms(
-    month: Optional[int] = Query(None, description="基準月（指定月のデータを取得）", ge=1, le=12)
+    month: Optional[int] = Query(
+        None, description="基準月（指定月のデータを取得）", ge=1, le=12
+    )
 ):
     """
     ヒストグラムデータ取得API
     リソースヒストグラム一覧を取得して返却します
     """
     logger.info(f"Histogram data requested for month: {month}")
-    
+
     try:
         # デモ用のサンプルヒストグラムデータ
         demo_histograms = [
@@ -45,8 +96,8 @@ def get_histograms(
                     "histogram_09month": 2.1,
                     "histogram_10month": 1.7,
                     "histogram_11month": 1.6,
-                    "histogram_12month": 1.4
-                }
+                    "histogram_12month": 1.4,
+                },
             },
             {
                 "histogram_id": 2,
@@ -69,8 +120,8 @@ def get_histograms(
                     "histogram_09month": 1.2,
                     "histogram_10month": 1.0,
                     "histogram_11month": 0.9,
-                    "histogram_12month": 0.8
-                }
+                    "histogram_12month": 0.8,
+                },
             },
             {
                 "histogram_id": 3,
@@ -93,31 +144,33 @@ def get_histograms(
                     "histogram_09month": 2.0,
                     "histogram_10month": 1.9,
                     "histogram_11month": 2.1,
-                    "histogram_12month": 2.3
-                }
-            }
+                    "histogram_12month": 2.3,
+                },
+            },
         ]
-        
+
         # 月指定がある場合のフィルタリング（デモでは全データを返す）
         if month:
             logger.info(f"Filtering data for month: {month}")
             # 実際の実装では、指定月のデータをフィルタリング
-        
+
         return demo_histograms
-        
+
     except Exception as e:
         logger.error(f"Error retrieving histogram data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve histogram data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve histogram data: {str(e)}"
+        )
 
 
-@router.get("/projects", response_model=list[Project])
+@router.get("/projects", response_model=list[ProjectResponse])
 def get_projects():
     """
     プロジェクトデータ取得API
     プロジェクト一覧を取得して返却します
     """
     logger.info("Project data requested")
-    
+
     try:
         # デモ用のサンプルプロジェクトデータ
         demo_projects = [
@@ -130,7 +183,7 @@ def get_projects():
                 "project_sched_to": "2025-12-31",
                 "project_type_name": "システム開発",
                 "project_classification": "新規開発",
-                "project_budget_no": "B2025001"
+                "project_budget_no": "B2025001",
             },
             {
                 "project_id": 2,
@@ -141,7 +194,7 @@ def get_projects():
                 "project_sched_to": "2025-08-31",
                 "project_type_name": "データ分析",
                 "project_classification": "新規開発",
-                "project_budget_no": "B2025002"
+                "project_budget_no": "B2025002",
             },
             {
                 "project_id": 3,
@@ -152,25 +205,27 @@ def get_projects():
                 "project_sched_to": "2025-09-30",
                 "project_type_name": "アプリ開発",
                 "project_classification": "新規開発",
-                "project_budget_no": "B2025003"
-            }
+                "project_budget_no": "B2025003",
+            },
         ]
-        
+
         return demo_projects
-        
+
     except Exception as e:
         logger.error(f"Error retrieving project data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve project data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve project data: {str(e)}"
+        )
 
 
-@router.get("/users", response_model=list[User])
+@router.get("/users", response_model=list[UserResponse])
 def get_users():
     """
     ユーザーデータ取得API
     メンバーリストを取得して返却します
     """
     logger.info("User data requested")
-    
+
     try:
         # デモ用のサンプルユーザーデータ
         demo_users = [
@@ -179,156 +234,50 @@ def get_users():
                 "user_code": "U001",
                 "user_name": "田中太郎",
                 "user_team": "開発チーム",
-                "user_type": "GENERAL"
+                "user_type": "GENERAL",
             },
             {
                 "user_id": 2,
                 "user_code": "U002",
                 "user_name": "佐藤花子",
                 "user_team": "開発チーム",
-                "user_type": "GENERAL"
+                "user_type": "GENERAL",
             },
             {
                 "user_id": 3,
                 "user_code": "U003",
                 "user_name": "鈴木次郎",
                 "user_team": "テストチーム",
-                "user_type": "GENERAL"
-            }
+                "user_type": "GENERAL",
+            },
         ]
-        
+
         return demo_users
-        
+
     except Exception as e:
         logger.error(f"Error retrieving user data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve user data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve user data: {str(e)}"
+        )
 
 
-@router.get("/notice", response_model=dict)
-def get_notices(
-    page: int = Query(1, description="ページ番号", ge=1),
-    limit: int = Query(20, description="1ページあたりの件数", ge=1, le=100)
-):
-    """
-    通知一覧取得API
-    ユーザーの通知一覧を取得します
-    """
-    logger.info(f"Notice data requested - page: {page}, limit: {limit}")
-    
-    try:
-        # デモ用のサンプル通知データ
-        demo_notices = [
-            {
-                "notice_time": "2025-07-08T10:00:00Z",
-                "user_name": "田中太郎",
-                "notice_text": "プロジェクトPJ001の工事進行基準が達成されました",
-                "project_name": "Webシステム開発",
-                "notice_type": "工事進行基準案件"
-            },
-            {
-                "notice_time": "2025-07-08T09:30:00Z",
-                "user_name": "佐藤花子",
-                "notice_text": "システムメンテナンスが完了しました",
-                "project_name": None,
-                "notice_type": "システムメンテナンス"
-            },
-            {
-                "notice_time": "2025-07-08T09:00:00Z",
-                "user_name": "鈴木次郎",
-                "notice_text": "データ更新が完了しました",
-                "project_name": "データ分析システム",
-                "notice_type": "データ更新"
-            }
-        ]
-        
-        # ページネーション処理
-        total_count = len(demo_notices)
-        start_index = (page - 1) * limit
-        end_index = start_index + limit
-        paged_notices = demo_notices[start_index:end_index]
-        
-        return {
-            "notice": paged_notices,
-            "pagination": {
-                "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit,
-                "total_count": total_count,
-                "limit": limit,
-                "has_next": end_index < total_count,
-                "has_previous": page > 1
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Error retrieving notice data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve notice data: {str(e)}")
-
-
-@router.get("/assign")
-def get_assign_data(
-    month: Optional[int] = Query(None, description="基準月（指定月の前後1ヶ月分のデータを取得）", ge=1, le=12)
-):
-    """
-    ホーム画面アサインデータ取得API
-    ホーム画面に必要なアサインデータを取得して返却します
-    """
-    logger.info(f"Assign data requested for month: {month}")
-    
-    try:
-        # デモ用のサンプルアサインデータ
-        demo_assigns = [
-            {
-                "user_name": "田中太郎",
-                "assin_execution": 120.0,
-                "assin_maintenance": 20.0,
-                "assin_prospect": 10.0,
-                "assin_common_cost": 5.0,
-                "assin_most_com_ps": 3.0,
-                "assin_sales_mane": 2.0,
-                "assin_investigation": 0.0,
-                "month_totals": {
-                    "previous_month": {
-                        "month": 4,
-                        "total_assin": 150.5
-                    },
-                    "current_month": {
-                        "month": 5,
-                        "total_assin": 160.0
-                    },
-                    "next_month": {
-                        "month": 6,
-                        "total_assin": 155.8
-                    }
-                },
-                "assin_project_code": 1,
-                "assin_directly": 140.0,
-                "assin_common": 15.0,
-                "assin_sales_sup": 5.0
-            }
-        ]
-        
-        return {"assigns": demo_assigns}
-        
-    except Exception as e:
-        logger.error(f"Error retrieving assign data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve assign data: {str(e)}")
-
-
-@router.get("/information")
+@router.get("/informations")
 def get_information(
-    month: int = Query(..., description="基準月（前後1ヶ月分の合計値を取得）", ge=1, le=12),
-    year: Optional[int] = Query(None, description="対象年", ge=1900, le=2100)
+    month: int = Query(
+        ..., description="基準月（前後1ヶ月分の合計値を取得）", ge=1, le=12
+    ),
+    year: Optional[int] = Query(None, description="対象年", ge=1900, le=2100),
 ):
     """
     情報表示画面API
     総計情報を取得します
     """
     logger.info(f"Information data requested for month: {month}, year: {year}")
-    
+
     try:
         if year is None:
             year = 2025
-        
+
         # デモ用のサンプル総計データ
         demo_data = {
             "base_month": month,
@@ -336,16 +285,13 @@ def get_information(
             "month_totals": {
                 "previous_month": {
                     "month": month - 1 if month > 1 else 12,
-                    "total_amount": 1250.75
+                    "total_amount": 1250.75,
                 },
-                "current_month": {
-                    "month": month,
-                    "total_amount": 1400.50
-                },
+                "current_month": {"month": month, "total_amount": 1400.50},
                 "next_month": {
                     "month": month + 1 if month < 12 else 1,
-                    "total_amount": 1325.25
-                }
+                    "total_amount": 1325.25,
+                },
             },
             "totals": [
                 {
@@ -360,16 +306,80 @@ def get_information(
                     "total_investigation": 10.0,
                     "total_directly": 900.0,
                     "total_common": 180.0,
-                    "total_sales_sup": 25.0
+                    "total_sales_sup": 25.0,
                 }
-            ]
+            ],
         }
-        
+
         return demo_data
-        
+
     except Exception as e:
         logger.error(f"Error retrieving information data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve information data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve information data: {str(e)}"
+        )
+
+
+@router.get("/notices", response_model=dict)
+def get_notices(
+    page: int = Query(1, description="ページ番号", ge=1),
+    limit: int = Query(20, description="1ページあたりの件数", ge=1, le=100),
+):
+    """
+    通知一覧取得API
+    ユーザーの通知一覧を取得します
+    """
+    logger.info(f"Notice data requested - page: {page}, limit: {limit}")
+
+    try:
+        # デモ用のサンプル通知データ
+        demo_notices = [
+            {
+                "notice_time": "2025-07-08T10:00:00Z",
+                "user_name": "田中太郎",
+                "notice_text": "プロジェクトPJ001の工事進行基準が達成されました",
+                "project_name": "Webシステム開発",
+                "notice_type": "工事進行基準案件",
+            },
+            {
+                "notice_time": "2025-07-08T09:30:00Z",
+                "user_name": "佐藤花子",
+                "notice_text": "システムメンテナンスが完了しました",
+                "project_name": None,
+                "notice_type": "システムメンテナンス",
+            },
+            {
+                "notice_time": "2025-07-08T09:00:00Z",
+                "user_name": "鈴木次郎",
+                "notice_text": "データ更新が完了しました",
+                "project_name": "データ分析システム",
+                "notice_type": "データ更新",
+            },
+        ]
+
+        # ページネーション処理
+        total_count = len(demo_notices)
+        start_index = (page - 1) * limit
+        end_index = start_index + limit
+        paged_notices = demo_notices[start_index:end_index]
+
+        return {
+            "notice": paged_notices,
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit,
+                "total_count": total_count,
+                "limit": limit,
+                "has_next": end_index < total_count,
+                "has_previous": page > 1,
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Error retrieving notice data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve notice data: {str(e)}"
+        )
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -399,7 +409,7 @@ def get_home():
             
             <div class="endpoint">
                 <div class="method">GET</div>
-                <div class="url">/assign</div>
+                <div class="url">/assigns</div>
                 <div class="description">ホーム画面アサインデータ取得</div>
             </div>
             
@@ -423,13 +433,13 @@ def get_home():
             
             <div class="endpoint">
                 <div class="method">GET</div>
-                <div class="url">/notice</div>
+                <div class="url">/notices</div>
                 <div class="description">通知一覧取得</div>
             </div>
             
             <div class="endpoint">
                 <div class="method">GET</div>
-                <div class="url">/information</div>
+                <div class="url">/informations</div>
                 <div class="description">情報表示画面データ取得</div>
             </div>
         </div>

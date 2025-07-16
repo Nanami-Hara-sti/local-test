@@ -1,18 +1,14 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
 import logging
 import os
-import json
-from datetime import datetime
-from typing import Optional
-import httpx
 from azure.storage.blob import BlobServiceClient
 from models import (
     BlobResponse,
     BlobListResponse,
     UploadResponse,
     DeleteResponse,
-    TextUploadRequest
+    TextUploadRequest,
 )
 
 # ログ設定
@@ -25,12 +21,12 @@ router = APIRouter()
 AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 CONTAINER_NAME = os.getenv("CONTAINER_NAME", "testcontainer")
 
+
 def get_blob_service_client():
     """Blob Service Clientを取得"""
     if not AZURE_STORAGE_CONNECTION_STRING:
         raise HTTPException(
-            status_code=500, 
-            detail="Azure Storage connection string not configured"
+            status_code=500, detail="Azure Storage connection string not configured"
         )
     return BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 
@@ -41,20 +37,26 @@ def list_blobs():
     try:
         blob_service_client = get_blob_service_client()
         container_client = blob_service_client.get_container_client(CONTAINER_NAME)
-        
+
         blobs = []
         for blob in container_client.list_blobs():
-            blobs.append({
-                "name": blob.name,
-                "size": blob.size,
-                "last_modified": blob.last_modified.isoformat() if blob.last_modified else None,
-                "content_type": blob.content_settings.content_type if blob.content_settings else None
-            })
-        
+            blobs.append(
+                {
+                    "name": blob.name,
+                    "size": blob.size,
+                    "last_modified": (
+                        blob.last_modified.isoformat() if blob.last_modified else None
+                    ),
+                    "content_type": (
+                        blob.content_settings.content_type
+                        if blob.content_settings
+                        else None
+                    ),
+                }
+            )
+
         return BlobListResponse(
-            container_name=CONTAINER_NAME,
-            blob_count=len(blobs),
-            blobs=blobs
+            container_name=CONTAINER_NAME, blob_count=len(blobs), blobs=blobs
         )
     except Exception as e:
         logger.error(f"Error listing blobs: {str(e)}")
@@ -67,26 +69,29 @@ def read_blob(blob_name: str):
     try:
         blob_service_client = get_blob_service_client()
         blob_client = blob_service_client.get_blob_client(
-            container=CONTAINER_NAME, 
-            blob=blob_name
+            container=CONTAINER_NAME, blob=blob_name
         )
-        
+
         # Blobの存在確認
         if not blob_client.exists():
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found")
-        
+
         # Blobの内容を読み取り
         content = blob_client.download_blob().readall()
-        
+
         # Blobのプロパティを取得
         properties = blob_client.get_blob_properties()
-        
+
         return BlobResponse(
             blob_name=blob_name,
-            content=content.decode('utf-8'),
+            content=content.decode("utf-8"),
             size=properties.size,
             content_type=properties.content_settings.content_type,
-            last_modified=properties.last_modified.isoformat() if properties.last_modified else None
+            last_modified=(
+                properties.last_modified.isoformat()
+                if properties.last_modified
+                else None
+            ),
         )
     except HTTPException:
         raise
@@ -101,24 +106,21 @@ def upload_text(request: TextUploadRequest):
     try:
         blob_service_client = get_blob_service_client()
         blob_client = blob_service_client.get_blob_client(
-            container=CONTAINER_NAME, 
-            blob=request.blob_name
+            container=CONTAINER_NAME, blob=request.blob_name
         )
-        
+
         # テキストをUTF-8でエンコードしてアップロード
         blob_client.upload_blob(
-            data=request.content.encode('utf-8'),
+            data=request.content.encode("utf-8"),
             overwrite=True,
-            content_settings={
-                "content_type": "text/plain; charset=utf-8"
-            }
+            content_settings={"content_type": "text/plain; charset=utf-8"},
         )
-        
+
         return UploadResponse(
             blob_name=request.blob_name,
             status="success",
             message=f"Text content uploaded to {request.blob_name}",
-            size=len(request.content.encode('utf-8'))
+            size=len(request.content.encode("utf-8")),
         )
     except Exception as e:
         logger.error(f"Error uploading text to {request.blob_name}: {str(e)}")
@@ -131,21 +133,20 @@ def delete_blob(blob_name: str):
     try:
         blob_service_client = get_blob_service_client()
         blob_client = blob_service_client.get_blob_client(
-            container=CONTAINER_NAME, 
-            blob=blob_name
+            container=CONTAINER_NAME, blob=blob_name
         )
-        
+
         # Blobの存在確認
         if not blob_client.exists():
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found")
-        
+
         # Blobを削除
         blob_client.delete_blob()
-        
+
         return DeleteResponse(
             blob_name=blob_name,
             status="success",
-            message=f"Blob {blob_name} deleted successfully"
+            message=f"Blob {blob_name} deleted successfully",
         )
     except HTTPException:
         raise
@@ -160,27 +161,29 @@ def download_blob(blob_name: str):
     try:
         blob_service_client = get_blob_service_client()
         blob_client = blob_service_client.get_blob_client(
-            container=CONTAINER_NAME, 
-            blob=blob_name
+            container=CONTAINER_NAME, blob=blob_name
         )
-        
+
         # Blobの存在確認
         if not blob_client.exists():
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found")
-        
+
         # Blobの内容とプロパティを取得
         content = blob_client.download_blob().readall()
         properties = blob_client.get_blob_properties()
-        
+
         return PlainTextResponse(
-            content=content.decode('utf-8'),
+            content=content.decode("utf-8"),
             headers={
                 "Content-Disposition": f'attachment; filename="{blob_name}"',
-                "Content-Type": properties.content_settings.content_type or "text/plain"
-            }
+                "Content-Type": properties.content_settings.content_type
+                or "text/plain",
+            },
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error downloading blob {blob_name}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to download blob: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to download blob: {str(e)}"
+        )

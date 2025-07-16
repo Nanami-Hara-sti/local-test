@@ -1,6 +1,25 @@
-# Azure Functions & FastAPI Python プロジェクト
+# Azure Functions & FastAPI 統合プロジェクト
 
-このプロジェクトは、Azure FunctionsとFastAPI用に最適化されたDev Container環境で構成されています。
+このプロジェクトは、Azure FunctionsとFastAPIを統合した統一アプリケーションです。MySQL データベースと連携し、Azure Blob Storage、EventGrid、Assign-Kun APIを提供します。
+
+## 🚀 主要機能
+
+### 統合アプリケーション (`function_app.py`)
+- **Azure Functions App** - EventGridトリガーとHTTPトリガー
+- **FastAPI Application** - REST API、Swagger UI、管理画面
+- **MySQL Database** - データ永続化とCRUD操作
+- **Azure Blob Storage** - ファイル管理とストレージ
+- **EventGrid** - イベント処理とリアルタイム通知
+
+### API エンドポイント
+- `/` - ホームページ（管理画面）
+- `/docs` - Swagger UI
+- `/health` - ヘルスチェック
+- `/db-health` - データベース接続確認
+- `/mysql/*` - MySQL CRUD操作
+- `/blob/*` - Azure Blob Storage操作
+- `/assign-kun/*` - Assign-Kun API
+- `/eventgrid/*` - EventGrid操作
 
 ## 環境構成
 
@@ -10,6 +29,9 @@
 - **Node.js LTS** - Azure Functions Core Toolsの依存関係
 - **Azure CLI** - Azure リソースの管理用
 - **Docker-in-Docker** - コンテナ開発用
+- **MySQL 8.0** - データベース
+- **SQLAlchemy** - ORM
+- **aiomysql** - 非同期MySQL接続
 - **VS Code 拡張機能**:
   - Azure Functions
   - Python
