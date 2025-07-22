@@ -298,6 +298,86 @@ class NoticeUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     is_read: Optional[bool] = None
+
+
+# ==============================================================================
+# CSV アップロード関連モデル
+# ==============================================================================
+
+
+class CSVUploadResponse(BaseModel):
+    """CSV アップロードレスポンス"""
+
+    message: str
+    type: str
+    filename: str
+    records_processed: int
+    updated_by: Optional[str] = None
+    blob_name: Optional[str] = None
+    processing_status: Optional[str] = None
+
+
+class HistogramCSVData(BaseModel):
+    """ヒストグラム CSV データモデル"""
+
+    histogram_ac_code: str
+    histogram_ac_name: str
+    histogram_pj_br_num: str
+    histogram_pj_name: str
+    histogram_pj_contract_form: str
+    histogram_costs_unit: int
+    histogram_year: int
+    histogram_1month: Optional[float] = 0.0
+    histogram_2month: Optional[float] = 0.0
+    histogram_3month: Optional[float] = 0.0
+    histogram_4month: Optional[float] = 0.0
+    histogram_5month: Optional[float] = 0.0
+    histogram_6month: Optional[float] = 0.0
+    histogram_7month: Optional[float] = 0.0
+    histogram_8month: Optional[float] = 0.0
+    histogram_9month: Optional[float] = 0.0
+    histogram_10month: Optional[float] = 0.0
+    histogram_11month: Optional[float] = 0.0
+    histogram_12month: Optional[float] = 0.0
+
+
+class ProjectCSVData(BaseModel):
+    """プロジェクト CSV データモデル"""
+
+    project_br_num: str
+    project_name: str
+    project_contract_form: str
+    project_sched_self: str  # YYYY-MM-DD形式
+    project_sched_to: str  # YYYY-MM-DD形式
+    project_type_name: str
+    project_classification: str
+    project_budget_no: str
+
+
+class UserCSVData(BaseModel):
+    """ユーザー CSV データモデル"""
+
+    user_code: str
+    user_name: str
+    user_team: str
+    user_type: Optional[str] = "GENERAL"
+
+
+class AssignDataCSVData(BaseModel):
+    """アサインデータ CSV データモデル"""
+
+    user_name: str
+    assin_execution: Optional[float] = 0.0
+    assin_maintenance: Optional[float] = 0.0
+    assin_prospect: Optional[float] = 0.0
+    assin_common_cost: Optional[float] = 0.0
+    assin_most_com_ps: Optional[float] = 0.0
+    assin_sales_mane: Optional[float] = 0.0
+    assin_investigation: Optional[float] = 0.0
+    assin_project_code: int
+    assin_directly: Optional[float] = 0.0
+    assin_common: Optional[float] = 0.0
+    assin_sales_sup: Optional[float] = 0.0
     priority: Optional[str] = None
 
 

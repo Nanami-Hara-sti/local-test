@@ -11,10 +11,21 @@
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
-from db_models import User, Project, Assignment, Notice, BlobLog, Histogram
-from typing import List, Optional
+from db_models import (
+    User,
+    Project,
+    Assignment,
+    Notice,
+    BlobLog,
+    Histogram,
+    AssignData,
+    HistogramData,
+    ProjectData,
+    UserData,
+)
+from typing import List, Optional, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -157,6 +168,11 @@ class ProjectCRUD:
             await db.commit()
             return True
         return False
+
+
+# ==============================================================================
+# 課題操作クラス
+# ==============================================================================
 
 
 class AssignmentCRUD:
@@ -524,3 +540,225 @@ class HistogramCRUD:
         except Exception as e:
             await db.rollback()
             raise e
+
+
+# ==============================================================================
+# 課題データ操作クラス
+# ==============================================================================
+
+
+class AssignDataCRUD:
+    """課題データ操作"""
+
+    @staticmethod
+    async def create_assign_data(db: AsyncSession, **kwargs) -> AssignData:
+        """課題データを作成"""
+        assign_data = AssignData(**kwargs)
+        db.add(assign_data)
+        await db.commit()
+        await db.refresh(assign_data)
+        return assign_data
+
+    @staticmethod
+    async def get_assign_data_by_id(
+        db: AsyncSession, assign_data_id: int
+    ) -> Optional[AssignData]:
+        """IDで課題データを取得"""
+        result = await db.execute(
+            select(AssignData).where(AssignData.id == assign_data_id)
+        )
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def get_all_assign_data(
+        db: AsyncSession, skip: int = 0, limit: int = 100
+    ) -> List[AssignData]:
+        """すべての課題データを取得"""
+        result = await db.execute(select(AssignData).offset(skip).limit(limit))
+        return result.scalars().all()
+
+    @staticmethod
+    async def get_assign_data_by_user_name(
+        db: AsyncSession, user_name: str
+    ) -> List[AssignData]:
+        """ユーザー名で課題データ一覧を取得"""
+        result = await db.execute(
+            select(AssignData)
+            .where(AssignData.user_name == user_name)
+            .order_by(AssignData.created_at.desc())
+        )
+        return result.scalars().all()
+
+    @staticmethod
+    async def update_assign_data(
+        db: AsyncSession, assign_data_id: int, **kwargs
+    ) -> Optional[AssignData]:
+        """課題データを更新"""
+        result = await db.execute(
+            select(AssignData).where(AssignData.id == assign_data_id)
+        )
+        assign_data = result.scalar_one_or_none()
+        if assign_data:
+            for key, value in kwargs.items():
+                if hasattr(assign_data, key):
+                    setattr(assign_data, key, value)
+            await db.commit()
+            await db.refresh(assign_data)
+        return assign_data
+
+    @staticmethod
+    async def delete_assign_data(db: AsyncSession, assign_data_id: int) -> bool:
+        """課題データを削除"""
+        result = await db.execute(
+            select(AssignData).where(AssignData.id == assign_data_id)
+        )
+        assign_data = result.scalar_one_or_none()
+        if assign_data:
+            await db.delete(assign_data)
+            await db.commit()
+            return True
+        return False
+
+
+# ==============================================================================
+# CSV アップロード操作クラス
+# ==============================================================================
+
+
+class HistogramDataCRUD:
+    """ヒストグラムデータ操作（CSV用）"""
+
+    @staticmethod
+    async def create_histogram_data(db: AsyncSession, **kwargs) -> HistogramData:
+        """ヒストグラムデータを作成"""
+        histogram_data = HistogramData(**kwargs)
+        db.add(histogram_data)
+        await db.commit()
+        await db.refresh(histogram_data)
+        return histogram_data
+
+    @staticmethod
+    async def bulk_create_histogram_data(
+        db: AsyncSession, histogram_list: List[Dict[str, Any]]
+    ) -> int:
+        """ヒストグラムデータを一括作成"""
+        count = 0
+        for data in histogram_list:
+            histogram_data = HistogramData(**data)
+            db.add(histogram_data)
+            count += 1
+        await db.commit()
+        return count
+
+    @staticmethod
+    async def clear_histogram_data(db: AsyncSession) -> int:
+        """全てのヒストグラムデータを削除"""
+        result = await db.execute(select(HistogramData))
+        existing_data = result.scalars().all()
+        count = len(existing_data)
+        for data in existing_data:
+            await db.delete(data)
+        await db.commit()
+        return count
+
+
+class ProjectDataCRUD:
+    """プロジェクトデータ操作（CSV用）"""
+
+    @staticmethod
+    async def create_project_data(db: AsyncSession, **kwargs) -> ProjectData:
+        """プロジェクトデータを作成"""
+        project_data = ProjectData(**kwargs)
+        db.add(project_data)
+        await db.commit()
+        await db.refresh(project_data)
+        return project_data
+
+    @staticmethod
+    async def bulk_create_project_data(
+        db: AsyncSession, project_list: List[Dict[str, Any]]
+    ) -> int:
+        """プロジェクトデータを一括作成"""
+        count = 0
+        for data in project_list:
+            project_data = ProjectData(**data)
+            db.add(project_data)
+            count += 1
+        await db.commit()
+        return count
+
+    @staticmethod
+    async def clear_project_data(db: AsyncSession) -> int:
+        """全てのプロジェクトデータを削除"""
+        result = await db.execute(select(ProjectData))
+        existing_data = result.scalars().all()
+        count = len(existing_data)
+        for data in existing_data:
+            await db.delete(data)
+        await db.commit()
+        return count
+
+
+class UserDataCRUD:
+    """ユーザーデータ操作（CSV用）"""
+
+    @staticmethod
+    async def create_user_data(db: AsyncSession, **kwargs) -> UserData:
+        """ユーザーデータを作成"""
+        user_data = UserData(**kwargs)
+        db.add(user_data)
+        await db.commit()
+        await db.refresh(user_data)
+        return user_data
+
+    @staticmethod
+    async def bulk_create_user_data(
+        db: AsyncSession, user_list: List[Dict[str, Any]]
+    ) -> int:
+        """ユーザーデータを一括作成"""
+        count = 0
+        for data in user_list:
+            user_data = UserData(**data)
+            db.add(user_data)
+            count += 1
+        await db.commit()
+        return count
+
+    @staticmethod
+    async def clear_user_data(db: AsyncSession) -> int:
+        """全てのユーザーデータを削除"""
+        result = await db.execute(select(UserData))
+        existing_data = result.scalars().all()
+        count = len(existing_data)
+        for data in existing_data:
+            await db.delete(data)
+        await db.commit()
+        return count
+
+
+class AssignDataCSVCRUD:
+    """アサインデータ操作（CSV用）"""
+
+    @staticmethod
+    async def bulk_create_assign_data(
+        db: AsyncSession, assign_list: List[Dict[str, Any]]
+    ) -> int:
+        """アサインデータを一括作成"""
+        count = 0
+        for data in assign_list:
+            assign_data = AssignData(**data)
+            db.add(assign_data)
+            count += 1
+        await db.commit()
+        return count
+
+    @staticmethod
+    async def clear_assign_data(db: AsyncSession) -> int:
+        """全てのアサインデータを削除"""
+        result = await db.execute(select(AssignData))
+        existing_data = result.scalars().all()
+        count = len(existing_data)
+        for data in existing_data:
+            await db.delete(data)
+        await db.commit()
+        return count

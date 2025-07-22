@@ -1,0 +1,30 @@
+# CSV Blob Storage設定のサンプル環境変数
+# local.settings.jsonまたは.envファイルに追加してください
+
+# CSV専用Blobコンテナ名
+CSV_CONTAINER_NAME=csv-uploads
+
+# EventGrid設定
+EVENTGRID_TOPIC_ENDPOINT=https://your-eventgrid-topic.eventgrid.azure.net/api/events
+EVENTGRID_ACCESS_KEY=your-eventgrid-access-key
+
+# Azure Storage設定（既存の設定を利用）
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=yourstorageaccount;AccountKey=yourkey;EndpointSuffix=core.windows.net
+
+# local.settings.jsonの場合は以下のように追加:
+# {
+#   "IsEncrypted": false,
+#   "Values": {
+#     "AzureWebJobsStorage": "...",
+#     "FUNCTIONS_WORKER_RUNTIME": "python",
+#     "AZURE_STORAGE_CONNECTION_STRING": "...",
+#     "CSV_CONTAINER_NAME": "csv-uploads",
+#     "EVENTGRID_TOPIC_ENDPOINT": "https://your-eventgrid-topic.eventgrid.azure.net/api/events",
+#     "EVENTGRID_ACCESS_KEY": "your-eventgrid-access-key",
+#     "MYSQL_HOST": "localhost",
+#     "MYSQL_PORT": "3306",
+#     "MYSQL_USER": "root",
+#     "MYSQL_PASSWORD": "password",
+#     "MYSQL_DATABASE": "assignkun_db"
+#   }
+# }

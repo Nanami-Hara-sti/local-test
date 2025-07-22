@@ -27,11 +27,12 @@ target_metadata = Base.metadata
 def get_database_url():
     db_host = os.getenv("DB_HOST", "localhost")
     db_port = os.getenv("DB_PORT", "3306")
-    db_name = os.getenv("DB_NAME", "assignkun")
-    db_user = os.getenv("DB_USER", "root")
-    db_password = os.getenv("DB_PASSWORD", "password")
+    db_name = os.getenv("DB_NAME", "assignkun_db")
+    db_user = os.getenv("DB_USER", "assignkun")
+    db_password = os.getenv("DB_PASSWORD", "assign")
 
-    return f"mysql+aiomysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    # Alembicは同期的なドライバーを必要とするため、pymysqlを使用
+    return f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 # other values from the config, defined by the needs of env.py,
@@ -74,8 +75,13 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # 設定からデータベースURLを取得、なければ環境変数から取得
+    configuration = config.get_section(config.config_ini_section, {})
+    if 'sqlalchemy.url' not in configuration:
+        configuration['sqlalchemy.url'] = get_database_url()
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

@@ -8,6 +8,7 @@ SQLAlchemy データベースモデル定義
 - Notice: 通知情報
 - BlobLog: Blob ログ情報
 - Histogram: ヒストグラム情報
+- AssignData: アサインデータ情報
 """
 
 from sqlalchemy import (
@@ -19,6 +20,7 @@ from sqlalchemy import (
     Boolean,
     ForeignKey,
     JSON,
+    DECIMAL,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func
@@ -155,6 +157,107 @@ class Histogram(Base):
     count = Column(Integer, nullable=False, comment="カウント")
     percentage = Column(String(10), comment="パーセンテージ")
     additional_data = Column(JSON, comment="追加データ")
+    created_at = Column(DateTime, default=func.now(), comment="作成日時")
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), comment="更新日時"
+    )
+
+
+class AssignData(Base):
+    """アサインデータテーブル"""
+
+    __tablename__ = "assign_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_name = Column(String(100), nullable=False, comment="ユーザー名")
+    assin_execution = Column(DECIMAL(10, 2), default=0.0, comment="実行アサイン")
+    assin_maintenance = Column(DECIMAL(10, 2), default=0.0, comment="保守アサイン")
+    assin_prospect = Column(DECIMAL(10, 2), default=0.0, comment="見込みアサイン")
+    assin_common_cost = Column(DECIMAL(10, 2), default=0.0, comment="共通費アサイン")
+    assin_most_com_ps = Column(DECIMAL(10, 2), default=0.0, comment="最も共通PS")
+    assin_sales_mane = Column(DECIMAL(10, 2), default=0.0, comment="営業管理")
+    assin_investigation = Column(DECIMAL(10, 2), default=0.0, comment="調査")
+    assin_project_code = Column(Integer, nullable=False, comment="プロジェクトコード")
+    assin_directly = Column(DECIMAL(10, 2), default=0.0, comment="直接")
+    assin_common = Column(DECIMAL(10, 2), default=0.0, comment="共通")
+    assin_sales_sup = Column(DECIMAL(10, 2), default=0.0, comment="営業支援")
+    month_data = Column(JSON, comment="月ごとの合計データ")
+    created_at = Column(DateTime, default=func.now(), comment="作成日時")
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), comment="更新日時"
+    )
+
+
+class HistogramData(Base):
+    """ヒストグラムデータテーブル（Swagger準拠）"""
+
+    __tablename__ = "histogram_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    histogram_ac_code = Column(String(30), nullable=False, comment="ACコード")
+    histogram_ac_name = Column(String(100), nullable=False, comment="AC名称")
+    histogram_pj_br_num = Column(String(30), nullable=False, comment="PJ枝番")
+    histogram_pj_name = Column(String(100), nullable=False, comment="PJ名称")
+    histogram_pj_contract_form = Column(
+        String(30), nullable=False, comment="PJ契約形態"
+    )
+    histogram_costs_unit = Column(Integer, nullable=False, comment="工数単位")
+    histogram_year = Column(Integer, nullable=False, comment="年")
+    histogram_1month = Column(String(10), default="0.00", comment="1月")
+    histogram_2month = Column(String(10), default="0.00", comment="2月")
+    histogram_3month = Column(String(10), default="0.00", comment="3月")
+    histogram_4month = Column(String(10), default="0.00", comment="4月")
+    histogram_5month = Column(String(10), default="0.00", comment="5月")
+    histogram_6month = Column(String(10), default="0.00", comment="6月")
+    histogram_7month = Column(String(10), default="0.00", comment="7月")
+    histogram_8month = Column(String(10), default="0.00", comment="8月")
+    histogram_9month = Column(String(10), default="0.00", comment="9月")
+    histogram_10month = Column(String(10), default="0.00", comment="10月")
+    histogram_11month = Column(String(10), default="0.00", comment="11月")
+    histogram_12month = Column(String(10), default="0.00", comment="12月")
+    created_at = Column(DateTime, default=func.now(), comment="作成日時")
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), comment="更新日時"
+    )
+
+
+class ProjectData(Base):
+    """プロジェクトデータテーブル（Swagger準拠）"""
+
+    __tablename__ = "project_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_br_num = Column(
+        String(30), nullable=False, unique=True, comment="PJコード枝番"
+    )
+    project_name = Column(String(100), nullable=False, comment="PJ名称")
+    project_contract_form = Column(String(30), nullable=False, comment="PJ契約形態")
+    project_sched_self = Column(String(20), nullable=False, comment="予定期間(自)")
+    project_sched_to = Column(String(20), nullable=False, comment="予定期間(至)")
+    project_type_name = Column(String(30), nullable=False, comment="PJタイプ名称")
+    project_classification = Column(String(30), nullable=False, comment="PJ分類")
+    project_budget_no = Column(String(30), nullable=False, comment="実行予算見積番号")
+    project_valid_from = Column(String(20), comment="追加日")
+    project_valid_to = Column(String(20), comment="有効期限")
+    project_is_current = Column(Boolean, default=True, comment="現行PJフラグ")
+    created_at = Column(DateTime, default=func.now(), comment="作成日時")
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now(), comment="更新日時"
+    )
+
+
+class UserData(Base):
+    """ユーザーデータテーブル（Swagger準拠）"""
+
+    __tablename__ = "user_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_code = Column(
+        String(30), nullable=False, unique=True, comment="ユーザーコード"
+    )
+    user_name = Column(String(30), nullable=False, comment="ユーザー名")
+    user_team = Column(String(30), nullable=False, comment="所属チーム")
+    user_type = Column(String(20), default="GENERAL", comment="ユーザータイプ")
     created_at = Column(DateTime, default=func.now(), comment="作成日時")
     updated_at = Column(
         DateTime, default=func.now(), onupdate=func.now(), comment="更新日時"

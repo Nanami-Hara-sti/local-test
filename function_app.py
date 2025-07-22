@@ -24,6 +24,8 @@ import blob_endpoints
 import blob_views
 import assignkun_endpoints
 import eventgrid_endpoints
+import csv_endpoints
+import csv_blob_endpoints
 
 # MySQLエンドポイントは条件付きインポート
 try:
@@ -69,7 +71,7 @@ async def lifespan(app: FastAPI):
 
     # データベース接続プールを作成
     try:
-        await db_manager.create_pool()
+        db_manager.initialize()  # create_pool() ではなく initialize() を使用
         await init_database()
         logger.info("✅ データベース初期化完了")
     except Exception as e:
@@ -79,7 +81,7 @@ async def lifespan(app: FastAPI):
 
     # 終了時
     logger.info("🔄 アプリケーション終了中...")
-    await db_manager.close_pool()
+    await db_manager.close()  # close_pool() ではなく close() を使用
     logger.info("✅ データベース接続を閉じました")
 
 
@@ -105,6 +107,10 @@ fastapi_app.include_router(
 fastapi_app.include_router(blob_views.router, prefix="/blob", tags=["� Blob Views"])
 fastapi_app.include_router(
     eventgrid_endpoints.router, prefix="/eventgrid", tags=["⚡ EventGrid"]
+)
+fastapi_app.include_router(csv_endpoints.router, prefix="/csv", tags=["📂 CSV Upload"])
+fastapi_app.include_router(
+    csv_blob_endpoints.router, prefix="/csv-blob", tags=["📂 CSV Blob Storage"]
 )
 
 # MySQLエンドポイントは条件付きで登録

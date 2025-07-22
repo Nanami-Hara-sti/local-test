@@ -52,7 +52,7 @@ async def test_database_operations():
         # データベースセッションを使用したテスト
         db_manager.initialize()
         async with db_manager.async_session_maker() as session:
-            
+
             # 簡単なクエリテスト
             result = await session.execute(text("SELECT 1 as test"))
             test_result = result.scalar()

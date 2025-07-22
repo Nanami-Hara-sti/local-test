@@ -1,0 +1,4 @@
+project_br_num,project_name,project_contract_form,project_sched_self,project_sched_to,project_type_name,project_classification,project_budget_no
+PJ001,Webシステム開発,請負,2025-01-01,2025-12-31,システム開発,新規開発,B2025001
+PJ002,モバイルアプリ開発,SES,2025-02-01,2025-11-30,アプリ開発,新規開発,B2025002
+PJ003,レガシーシステム保守,請負,2025-01-15,2025-12-15,システム保守,保守運用,B2025003

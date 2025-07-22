@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse
 import logging
 import json
 from datetime import datetime
 from typing import List, Dict, Any
+
+# CSV処理関連のインポートを追加
+from csv_processor import process_csv_from_eventgrid
 
 # ログ設定
 logger = logging.getLogger(__name__)
@@ -16,7 +19,7 @@ events_storage: List[Dict[str, Any]] = []
 
 
 @router.post("/events")
-async def handle_eventgrid_webhook(request: Request):
+async def handle_eventgrid_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Azure EventGridからのWebhookイベントを受信
     """
@@ -43,6 +46,14 @@ async def handle_eventgrid_webhook(request: Request):
             # ストレージサイズを制限（最新100件まで）
             if len(events_storage) > 100:
                 events_storage.pop(0)
+
+            # CSVファイルアップロードイベントかチェック
+            if event.get("eventType") == "csvfile.uploaded":
+                logger.info(f"CSV処理イベントを検出: {event.get('subject')}")
+                # バックグラウンドでCSV処理を開始
+                background_tasks.add_task(
+                    process_csv_from_eventgrid, event.get("data", {})
+                )
 
             logger.info(
                 f"Processed event: {event.get('eventType', 'Unknown')} - {event.get('subject', 'No subject')}"
