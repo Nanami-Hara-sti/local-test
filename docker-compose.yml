@@ -1,29 +1,47 @@
 version: '3.8'
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: assignkun_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: assignkun_db
+      MYSQL_USER: assignkun
+      MYSQL_PASSWORD: assign
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - assignkun_network
+
   fastapi:
     build:
       context: .
       dockerfile: Dockerfile.fastapi
+    container_name: assignkun_fastapi
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    depends_on:
+      - mysql
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=assignkun
+      - MYSQL_PASSWORD=assignkun_password
+      - MYSQL_DATABASE=assignkun_db
     volumes:
       - .:/app
-    environment:
-      - PYTHONPATH=/app
-    command: uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
-    
-  # 将来的にデータベース等を追加する場合
-  # postgres:
-  #   image: postgres:14
-  #   environment:
-  #     POSTGRES_DB: fastapi_db
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
+    networks:
+      - assignkun_network
 
-# volumes:
-#   postgres_data:
+volumes:
+  mysql_data:
+
+networks:
+  assignkun_network:
+    driver: bridge

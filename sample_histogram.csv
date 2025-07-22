@@ -1,0 +1,4 @@
+histogram_ac_code,histogram_ac_name,histogram_pj_br_num,histogram_pj_name,histogram_pj_contract_form,histogram_costs_unit,histogram_year,histogram_1month,histogram_2month,histogram_3month,histogram_4month,histogram_5month,histogram_6month,histogram_7month,histogram_8month,histogram_9month,histogram_10month,histogram_11month,histogram_12month
+AC001,アカウント1,PJ001,プロジェクト1,請負,1,2025,1.2,1.5,1.8,1.5,2.0,1.8,2.2,1.9,2.1,1.7,1.6,1.4
+AC002,アカウント2,PJ002,プロジェクト2,SES,1,2025,1.0,1.3,1.6,1.4,1.8,1.6,2.0,1.7,1.9,1.5,1.4,1.2
+AC003,アカウント3,PJ003,プロジェクト3,請負,2,2025,2.4,3.0,3.6,3.0,4.0,3.6,4.4,3.8,4.2,3.4,3.2,2.8
